@@ -36,6 +36,13 @@ T get_value(std::list<T> given, int position) {
 		return *start;
 }
 
+int len(int arr[]) {
+    
+    return sizeof(arr)/sizeof(arr[0]);
+    
+}
+
+
 class Game {
 	
 	
@@ -141,14 +148,14 @@ class Game {
 			 int file,rank,target_rank,target_file, target_sq;
 			 U64 move_mask;
 			 
-			 std::list<U64> legal_moves(BOARD_AREA, 0x000000000000000);
+			 std::list<U64> legal_moves(BOARD_AREA, 0ULL);
 			 //loop through all the sqaures
 			 for(int i = 0; i<BOARD_AREA; ++i) {
-				move_mask = 0x0000000000000000;
+				move_mask = 0ULL;
 				file = i%BOARD_SIZE;
 				rank = floor(i/BOARD_SIZE);
 				
-				for(int j =0;j<BOARD_SIZE;++j) {
+				for(int j =0;j<8;++j) {
 					//loop through all offsets
 					target_file = file+dy[j];
 					target_rank = rank+dx[j];
@@ -168,6 +175,44 @@ class Game {
 			 }
 			 
 			 return legal_moves;
+	}
+	
+	std::list<U64> precomp_moves(int dx[], int dy[]) {
+	    
+	    
+			 //all posible offsets
+			 int file,rank,target_rank,target_file, target_sq;
+			 U64 move_mask;
+			 
+			 std::list<U64> legal_moves(BOARD_AREA, 0ULL);
+			 //loop through all the sqaures
+			 for(int i = 0; i<BOARD_AREA; ++i) {
+				move_mask = 0ULL;
+				file = i%BOARD_SIZE;
+				rank = floor(i/BOARD_SIZE);
+				
+				for(int j =0;j<len(dx);++j) {
+					//loop through all offsets
+					target_file = file+dy[j];
+					target_rank = rank+dx[j];
+					//if the target sqaure is on the board
+					if((target_file>=0&&target_file<BOARD_SIZE)&&(target_rank>=0&&target_rank<BOARD_SIZE)) {
+						
+						target_sq = (target_rank*BOARD_SIZE)+target_file;
+						move_mask = setBit(move_mask,target_sq);
+						// set the target_sq in the move mask to 1 so we know we can get there
+						
+					}
+				}
+						
+				legal_moves=change_value(legal_moves, move_mask, i);
+				//append the bitboard to the end of the list
+					
+			 }
+			 
+			 return legal_moves;
+	    
+	    
 	}
 		
 	};
