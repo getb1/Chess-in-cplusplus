@@ -4,7 +4,7 @@
 #include <cctype>
 #include <cmath>
 #include <vector>
-
+#include <array>
 
 typedef unsigned long long U64;
 
@@ -28,6 +28,14 @@ U64 setBit(U64 num, int target_bit) {
 		return num | (static_cast<U64>(1) << target_bit);
 }
 
+U64 setBitzero(U64 num, int target_bit) {
+	U64 mask = ~(1ULL << target_bit);  // Shift 1 to the left by 'pos', then negate
+
+    // Use bitwise AND to clear the bit at 'pos'
+    return num & mask;
+
+}
+
 template<typename T>
 T get_value(std::list<T> given, int position) {
 		//get value of any item in a list
@@ -35,13 +43,6 @@ T get_value(std::list<T> given, int position) {
 		std::advance(start, position);
 		return *start;
 }
-
-int len(int arr[]) {
-    
-    return sizeof(arr)/sizeof(arr[0]);
-    
-}
-
 
 class Game {
 	
@@ -56,8 +57,13 @@ class Game {
 		U64 queens;
 		U64 pawns;
 		std::list<U64> precomp_knight_moves;
+		
 		const int BOARD_SIZE = 8;
 		const int BOARD_AREA = BOARD_SIZE*BOARD_SIZE;
+		std::list<U64> rookPrecompMoves;
+		std::list<U64> bishopPrecompMoves;
+		std::list<U64> queenPrecompMoves;
+		std::list<U64> kingPrecompMoves;
 		Game() {
 				init();
 		}
@@ -74,7 +80,21 @@ class Game {
 		pawns = 0x00ff00000000ff00;
 		
 		//precompute all the knight moves so that we can use these later
+		
 		precomp_knight_moves = precompute_knight_moves();
+		
+		std::vector<int> bishopDx = {1, 1, -1, -1};
+		std::vector<int> bishopDy = {1, -1, 1, -1};
+		std::vector<int> rookDx = {0, 0, 1, -1};
+		std::vector<int> rookDy = {1, -1, 0, 0};
+		std::vector<int> queenDx = {0, 0, 1, -1, 1, 1, -1, -1};
+		std::vector<int> queenDy = {1, -1, 0, 0, 1, -1, 1, -1};
+		
+		rookPrecompMoves = precomputePieceMoves(rookDx, rookDy);
+        bishopPrecompMoves = precomputePieceMoves(bishopDx, bishopDy);
+        queenPrecompMoves = precomputePieceMoves(queenDx, queenDy);
+        kingPrecompMoves = precomputeKingMoves(queenDx, queenDy);
+		
 		}
 		
 	void display_board() {
@@ -177,7 +197,46 @@ class Game {
 			 return legal_moves;
 	}
 	
-	std::list<U64> precomp_moves(int dx[], int dy[]) {
+	std::list<U64> precomputeKingMoves(std::vector<int>& dx, std::vector<int>& dy) {
+		
+		int file,rank,target_rank,target_file, target_sq;
+			 U64 move_mask;
+			 
+			 std::list<U64> legal_moves(BOARD_AREA, 0ULL);
+			 //loop through all the sqaures
+			 for(int i = 0; i<BOARD_AREA; ++i) {
+				move_mask = 0ULL;
+				file = i%BOARD_SIZE;
+				rank = floor(i/BOARD_SIZE);
+				
+				int length = sizeof(dx)/sizeof(dx[0]);
+				
+				for(int j =0;j<length;++j) {
+					//loop through all offsets
+					
+					target_file = file+dy[j];
+					target_rank = rank+dx[j];
+					//if the target sqaure is on the board
+					if((target_file>=0&&target_file<BOARD_SIZE)&&(target_rank>=0&&target_rank<BOARD_SIZE)) {
+						
+						target_sq = (target_rank*BOARD_SIZE)+target_file;
+						move_mask = setBit(move_mask,target_sq);
+						// set the target_sq in the move mask to 1 so we know we can get there
+						
+					}
+				}
+				//move_mask = setBitzero(move_mask,i);
+				legal_moves=change_value(legal_moves, move_mask, i);
+				//append the bitboard to the end of the list
+					
+			 }
+			 
+			 return legal_moves;
+	    
+	    
+	}
+	
+	std::list<U64> precomputePieceMoves(std::vector<int>& dx, std::vector<int>& dy) {
 	    
 	    
 			 //all posible offsets
@@ -191,10 +250,13 @@ class Game {
 				file = i%BOARD_SIZE;
 				rank = floor(i/BOARD_SIZE);
 				
-				for(int j =0;j<len(dx);++j) {
+				int length = sizeof(dx)/sizeof(dx[0]);
+				
+				for(int j =0;j<length;++j) {
 					//loop through all offsets
-					target_file = file+dy[j];
-					target_rank = rank+dx[j];
+					for(int x=1;x<9;++x) {
+					target_file = file+dy[j]*x;
+					target_rank = rank+dx[j]*x;
 					//if the target sqaure is on the board
 					if((target_file>=0&&target_file<BOARD_SIZE)&&(target_rank>=0&&target_rank<BOARD_SIZE)) {
 						
@@ -203,8 +265,8 @@ class Game {
 						// set the target_sq in the move mask to 1 so we know we can get there
 						
 					}
-				}
-						
+				}}
+				move_mask = setBitzero(move_mask,i);
 				legal_moves=change_value(legal_moves, move_mask, i);
 				//append the bitboard to the end of the list
 					
@@ -223,7 +285,7 @@ int main() {
 		
 		chess.display_board();
 		char x = '*';
-		chess.debug_display_bitboard(chess.precomp_knight_moves.front(), x);
+		chess.debug_display_bitboard(chess.rookPrecompMoves.front(), x);
 		
 		
 		
