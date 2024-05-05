@@ -9,7 +9,7 @@
 typedef unsigned long long U64;
 
 /* Todo
- * Diagonal move validation
+ * Diagonal move validation test
  * Checks
  * Checkmate
  * Stalemate
