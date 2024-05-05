@@ -13,7 +13,6 @@ int getNthBit(U64 num, int n) {
 		return 1==((num>>n)&1);
 }
 
-
 template<typename T>
 std::list<T> change_value(std::list<T> toChange, const T& value, int position) {
 		// change the value of any list to a certain value
@@ -56,6 +55,8 @@ class Game {
 		U64 kings;
 		U64 queens;
 		U64 pawns;
+		const int BLACK = 0;
+		const int WHITE = 1;
 		std::list<U64> precomp_knight_moves;
 		
 		const int BOARD_SIZE = 8;
@@ -143,10 +144,13 @@ class Game {
 	
 	void debug_display_bitboard(U64 board, char symbol) {
 			
+			std::cout << "  a b c d e f g h\n";
 			
 			// the same logic as the display function however only displays one board
 			for(int i =0;i<BOARD_AREA;++i) {
-			
+					if(i %BOARD_SIZE == 0) {
+							std::cout << (i/BOARD_SIZE) + 1 << " ";
+					}
 					if(getNthBit(board, i)) {
 							std::cout << symbol << " ";
 					} else {std::cout << "· ";}
@@ -276,7 +280,90 @@ class Game {
 	    
 	    
 	}
+	
+	U64 get_legal_moves_for_piece_in_position(int position, U64 board, std::list<U64> precomputed,U64 colour_board) {
 		
+	if(getNthBit(board, position)) {
+		
+		U64 moves = get_value(precomputed, position);
+		U64 all_other_pieces = setBitzero(white|black, position);
+		int file,rank,square;
+		U64 opposite = ((white&colour_board)==white) ? black: white;
+		//check upwards moves
+		// e.g. the bitboard is like this and one of the pieces is blocking a move
+		// 0001000
+		// 000*000
+		// 111x111
+		// the highest one should be blocked
+		
+		rank = floor(position/8);
+		file = position%8;
+		int all=0;
+		for(int i=-1;i>-BOARD_SIZE;--i) {
+				square = 8*(rank+i)+file;
+				// get the value of the sqaure
+				if((square<0)) {break;} else {
+				/*Check the piece is on the baord and if so
+				  * then check if there is a collision whit a whitepiece or if we have
+				  * already had a collision then blank that sqaure and set the all variable
+				  * to one to continue blanking sqaures eve if we have no collison as the 
+				  * remainig sqaures should be blocked
+				  * The next loops all use the same logic however horizontal checks check to see if
+				  * the piece is on the same rank rather than on the board. */
+				if(getNthBit(colour_board,square)||all) {
+					moves = setBitzero(moves, square);
+					all = 1;	
+				} else if(getNthBit(opposite, square)) {
+						// if we have a collision with the opposite colour then we know we can keep itas a capture and set the all variable to 1
+						all=1;
+				}
+			
+				}
+		}
+		all=0;
+		for(int i=1;i<BOARD_SIZE;++i) {
+				square = 8*(rank+i)+file;
+				
+				if((square>63)) {break;} else {
+					
+				 
+				if(getNthBit(colour_board,square)||all) {
+					moves = setBitzero(moves, square);
+					all = 1;	
+				} else if(getNthBit(opposite, square)) {
+						all=1;}
+				}}
+		all=0;
+		for(int i=-1;i>-BOARD_SIZE;--i) {
+				square = (rank*8)+file+i;
+				
+				if((square/8)!=rank) {break;} else {
+				if(getNthBit(colour_board,square)||all) {
+					moves = setBitzero(moves, square);
+					all = 1;	
+				} else if(getNthBit(opposite, square)) {
+						all=1;}
+				}}
+		all=0;
+		for(int i=1;i<BOARD_SIZE;++i) {
+				square = (rank*8)+file+i;
+				
+				if((square/8)!=rank) {break;} else {
+				if(getNthBit(colour_board,square)||all) {
+					moves = setBitzero(moves, square);
+					all = 1;	
+				} else if(getNthBit(opposite, square)) {
+						all=1;}
+				}}
+		
+		all=0;
+		
+		
+		return moves;
+		}
+		return 0ULL;
+		}
+	
 	};
 
 
@@ -284,10 +371,9 @@ int main() {
 		Game chess;
 		
 		chess.display_board();
-		char x = '*';
-		chess.debug_display_bitboard(chess.rookPrecompMoves.front(), x);
 		
-		
+		U64 rook_legal = chess.get_legal_moves_for_piece_in_position(3,chess.queens, chess.queenPrecompMoves,chess.white); 
+		chess.debug_display_bitboard(rook_legal, '*');
 		
 		return 0;
 }
