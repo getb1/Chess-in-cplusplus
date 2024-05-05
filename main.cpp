@@ -8,6 +8,15 @@
 
 typedef unsigned long long U64;
 
+/* Todo
+ * Diagonal move validation
+ * Checks
+ * Checkmate
+ * Stalemate
+ * Making/undoing moves
+ * UI
+ * */
+
 int getNthBit(U64 num, int n) {
 	//get the value of the nth bit
 		return 1==((num>>n)&1);
