@@ -366,7 +366,38 @@ class Game {
 				}}
 		
 		all=0;
-		
+		std::vector<int> bishopDx = {1, 1, -1, -1};
+		std::vector<int> bishopDy = {1, -1, 1, -1};
+		int newRank,newFile,oldrank,oldfile,newSquare;
+		for(int i=0;i<4;++i) {
+				int offsetX = bishopDx[i];
+				int offsetY = bishopDy[i];
+				for(int j=1;j<8;++j) {
+						oldrank = rank;
+						oldfile = file;
+						newRank = rank+(offsetY*j);
+						newFile = file+(offsetX*j);
+						newSquare = (newRank*8)+newFile;
+						std::cout << newSquare << newFile << newRank << std::endl;
+						if(newSquare<64) {
+								if((newFile>=0)&&(newFile<8)) {
+										if((newRank>=0)&&(newRank<8)) {
+											if(getNthBit(colour_board,newSquare)||all) {
+												moves = setBitzero(moves, newSquare);
+												all = 1;	
+											} else if(getNthBit(opposite, newSquare)) {
+													all=1;}	
+										}
+								} else {break;}
+						} else {
+								break;
+						}
+						
+						
+				}
+				
+				
+		}
 		
 		return moves;
 		}
