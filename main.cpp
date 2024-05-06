@@ -1,3 +1,6 @@
+/* Copyright 2024 Guy Bailey */
+
+
 #include <iostream>
 #include <list>
 #include <string>
@@ -10,6 +13,7 @@ typedef unsigned long long U64;
 
 /* Todo
  * Diagonal move validation test
+ * Pawn Move Precomputation cheking
  * Checks
  * Checkmate
  * Stalemate
@@ -18,7 +22,7 @@ typedef unsigned long long U64;
  * */
 
 int getNthBit(U64 num, int n) {
-	//get the value of the nth bit
+	// get the value of the nth bit
 		return 1==((num>>n)&1);
 }
 
@@ -32,7 +36,7 @@ std::list<T> change_value(std::list<T> toChange, const T& value, int position) {
 }
 
 U64 setBit(U64 num, int target_bit) {
-		//set a bit to 1
+		// set a bit to 1
 		return num | (static_cast<U64>(1) << target_bit);
 }
 
@@ -46,7 +50,7 @@ U64 setBitzero(U64 num, int target_bit) {
 
 template<typename T>
 T get_value(std::list<T> given, int position) {
-		//get value of any item in a list
+		// get value of any item in a list
 		auto start = given.begin();
 		std::advance(start, position);
 		return *start;
@@ -74,6 +78,10 @@ class Game {
 		std::list<U64> bishopPrecompMoves;
 		std::list<U64> queenPrecompMoves;
 		std::list<U64> kingPrecompMoves;
+    std::list<U64> whitePawnPrecompMoves;
+    std::list<U64> blackPawnPrecompMoves;
+
+
 		Game() {
 				init();
 		}
@@ -89,7 +97,7 @@ class Game {
 		queens= 0x0800000000000008;
 		pawns = 0x00ff00000000ff00;
 		
-		//precompute all the knight moves so that we can use these later
+		// precompute all the knight moves so that we can use these later
 		
 		precomp_knight_moves = precompute_knight_moves();
 		
@@ -104,14 +112,15 @@ class Game {
         bishopPrecompMoves = precomputePieceMoves(bishopDx, bishopDy);
         queenPrecompMoves = precomputePieceMoves(queenDx, queenDy);
         kingPrecompMoves = precomputeKingMoves(queenDx, queenDy);
-		
+		whitePawnPrecompMoves = precompPawnMoves(1);
+    blackPawnPrecompMoves = precompPawnMoves(0);
 		}
 		
 	void display_board() {
-			//display the board from all the bitboards we defined earlier
+			// display the board from all the bitboards we defined earlier
 			std::cout << "  1 2 3 4 5 6 7 8\n";
 			
-			//all the bitboards
+			// all the bitboards
 			std::list<U64> bit_boards = {rooks,knights,bishops,kings,queens,pawns};
 			std::list<char> symbols = {'r','n','b','k','q','p'};
 			std::list<char> board(BOARD_AREA, '-');
@@ -177,22 +186,22 @@ class Game {
 	std::list<U64> precompute_knight_moves() {
 			 const int dx[] = {2,1,-2,-1,2,1,-2,-1};
 			 const int dy[] = {1,2, 1, 2,-1,-2,-1,-2};
-			 //all posible offsets
+			 // all posible offsets
 			 int file,rank,target_rank,target_file, target_sq;
 			 U64 move_mask;
 			 
 			 std::list<U64> legal_moves(BOARD_AREA, 0ULL);
-			 //loop through all the sqaures
+			 // loop through all the sqaures
 			 for(int i = 0; i<BOARD_AREA; ++i) {
 				move_mask = 0ULL;
 				file = i%BOARD_SIZE;
 				rank = floor(i/BOARD_SIZE);
 				
 				for(int j =0;j<8;++j) {
-					//loop through all offsets
+					// loop through all offsets
 					target_file = file+dy[j];
 					target_rank = rank+dx[j];
-					//if the target sqaure is on the board
+					// if the target sqaure is on the board
 					if((target_file>=0&&target_file<BOARD_SIZE)&&(target_rank>=0&&target_rank<BOARD_SIZE)) {
 						
 						target_sq = (target_rank*BOARD_SIZE)+target_file;
@@ -203,7 +212,7 @@ class Game {
 				}
 						
 				legal_moves=change_value(legal_moves, move_mask, i);
-				//append the bitboard to the end of the list
+				// append the bitboard to the end of the list
 					
 			 }
 			 
@@ -216,7 +225,7 @@ class Game {
 			 U64 move_mask;
 			 
 			 std::list<U64> legal_moves(BOARD_AREA, 0ULL);
-			 //loop through all the sqaures
+			 // loop through all the sqaures
 			 for(int i = 0; i<BOARD_AREA; ++i) {
 				move_mask = 0ULL;
 				file = i%BOARD_SIZE;
@@ -225,11 +234,11 @@ class Game {
 				int length = sizeof(dx)/sizeof(dx[0]);
 				
 				for(int j =0;j<length;++j) {
-					//loop through all offsets
+					// loop through all offsets
 					
 					target_file = file+dy[j];
 					target_rank = rank+dx[j];
-					//if the target sqaure is on the board
+					// if the target sqaure is on the board
 					if((target_file>=0&&target_file<BOARD_SIZE)&&(target_rank>=0&&target_rank<BOARD_SIZE)) {
 						
 						target_sq = (target_rank*BOARD_SIZE)+target_file;
@@ -238,9 +247,9 @@ class Game {
 						
 					}
 				}
-				//move_mask = setBitzero(move_mask,i);
+				// move_mask = setBitzero(move_mask,i);
 				legal_moves=change_value(legal_moves, move_mask, i);
-				//append the bitboard to the end of the list
+				// append the bitboard to the end of the list
 					
 			 }
 			 
@@ -252,12 +261,12 @@ class Game {
 	std::list<U64> precomputePieceMoves(std::vector<int>& dx, std::vector<int>& dy) {
 	    
 	    
-			 //all posible offsets
+			 // all posible offsets
 			 int file,rank,target_rank,target_file, target_sq;
 			 U64 move_mask;
 			 
 			 std::list<U64> legal_moves(BOARD_AREA, 0ULL);
-			 //loop through all the sqaures
+			 // loop through all the sqaures
 			 for(int i = 0; i<BOARD_AREA; ++i) {
 				move_mask = 0ULL;
 				file = i%BOARD_SIZE;
@@ -266,11 +275,11 @@ class Game {
 				int length = sizeof(dx)/sizeof(dx[0]);
 				
 				for(int j =0;j<length;++j) {
-					//loop through all offsets
+					// loop through all offsets
 					for(int x=1;x<9;++x) {
 					target_file = file+dy[j]*x;
 					target_rank = rank+dx[j]*x;
-					//if the target sqaure is on the board
+					// if the target sqaure is on the board
 					if((target_file>=0&&target_file<BOARD_SIZE)&&(target_rank>=0&&target_rank<BOARD_SIZE)) {
 						
 						target_sq = (target_rank*BOARD_SIZE)+target_file;
@@ -281,7 +290,7 @@ class Game {
 				}}
 				move_mask = setBitzero(move_mask,i);
 				legal_moves=change_value(legal_moves, move_mask, i);
-				//append the bitboard to the end of the list
+				// append the bitboard to the end of the list
 					
 			 }
 			 
@@ -298,7 +307,7 @@ class Game {
 		U64 all_other_pieces = setBitzero(white|black, position);
 		int file,rank,square;
 		U64 opposite = ((white&colour_board)==white) ? black: white;
-		//check upwards moves
+		// check upwards moves
 		// e.g. the bitboard is like this and one of the pieces is blocking a move
 		// 0001000
 		// 000*000
@@ -312,7 +321,7 @@ class Game {
 				square = 8*(rank+i)+file;
 				// get the value of the sqaure
 				if((square<0)) {break;} else {
-				/*Check the piece is on the baord and if so
+				/* Check the piece is on the baord and if so
 				  * then check if there is a collision whit a whitepiece or if we have
 				  * already had a collision then blank that sqaure and set the all variable
 				  * to one to continue blanking sqaures eve if we have no collison as the 
@@ -378,7 +387,6 @@ class Game {
 						newRank = rank+(offsetY*j);
 						newFile = file+(offsetX*j);
 						newSquare = (newRank*8)+newFile;
-						std::cout << newSquare << newFile << newRank << std::endl;
 						if(newSquare<64) {
 								if((newFile>=0)&&(newFile<8)) {
 										if((newRank>=0)&&(newRank<8)) {
@@ -404,23 +412,38 @@ class Game {
 		return 0ULL;
 		}
 	
-	};
+	
   
 
 std::list<U64> precompPawnMoves(int colour) {
     std::list<U64> legal_moves;
     U64 move_mask = 0ULL;
-    startRank = (coulor) ? 2:6;
+    int startRank = (colour) ? 1:5;
+    int finalRank = (colour) ? 0:7;
     int rank,file;
     for (int i = 0; i < BOARD_AREA; i++) {
+      move_mask=0ULL;
+      rank=floor(i/8);
+      file = i%8;
+      if(((rank<startRank)&&(startRank==2))||((rank>startRank)&&(startRank==6))) {
+        continue;}
+  
       if(rank==startRank) {
         
+        move_mask = setBit(move_mask, i+16);
 
       }
+      if(rank!=finalRank) {
+
+      move_mask = setBit(move_mask,i+8);
+
+      }
+    legal_moves = change_value(legal_moves, move_mask,i);
     }
+    
+  return legal_moves;
 
-
-  }
+  }};
 
 int main() {
 		Game chess;
@@ -428,7 +451,7 @@ int main() {
 		chess.display_board();
 		
 		U64 rook_legal = chess.get_legal_moves_for_piece_in_position(3,chess.queens, chess.queenPrecompMoves,chess.white); 
-		chess.debug_display_bitboard(rook_legal, '*');
+    chess.debug_display_bitboard(get_value(chess.whitePawnPrecompMoves, 8),'*');
     
 		return 0;
 }
