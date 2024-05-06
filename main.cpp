@@ -405,7 +405,22 @@ class Game {
 		}
 	
 	};
+  
 
+std::list<U64> precompPawnMoves(int colour) {
+    std::list<U64> legal_moves;
+    U64 move_mask = 0ULL;
+    startRank = (coulor) ? 2:6;
+    int rank,file;
+    for (int i = 0; i < BOARD_AREA; i++) {
+      if(rank==startRank) {
+        
+
+      }
+    }
+
+
+  }
 
 int main() {
 		Game chess;
@@ -414,6 +429,6 @@ int main() {
 		
 		U64 rook_legal = chess.get_legal_moves_for_piece_in_position(3,chess.queens, chess.queenPrecompMoves,chess.white); 
 		chess.debug_display_bitboard(rook_legal, '*');
-		
+    
 		return 0;
 }
