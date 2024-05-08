@@ -422,16 +422,17 @@ std::list<U64> precompPawnMoves(int colour) {
     int finalRank = (colour) ? 0:7;
     int rank,file;
     for (int i = 0; i < BOARD_AREA; i++) {
+      // std::cout << i << std::endl;
       move_mask=0ULL;
       rank=floor(i/8);
       file = i%8;
-      if(((rank<startRank)&&(startRank==2))||((rank>startRank)&&(startRank==6))) {
+      if(((rank<startRank)&&(startRank==1))||((rank>startRank)&&(startRank==5))) {
         continue;}
   
       if(rank==startRank) {
         
         move_mask = setBit(move_mask, i+16);
-
+        std::cout << move_mask << std::endl;
       }
       if(rank!=finalRank) {
 
@@ -451,7 +452,7 @@ int main() {
 		chess.display_board();
 		
 		U64 rook_legal = chess.get_legal_moves_for_piece_in_position(3,chess.queens, chess.queenPrecompMoves,chess.white); 
-    chess.debug_display_bitboard(get_value(chess.whitePawnPrecompMoves, 8),'*');
+    chess.debug_display_bitboard(chess.whitePawnPrecompMoves.front(),'*');
     
 		return 0;
 }
