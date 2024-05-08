@@ -420,6 +420,7 @@ std::list<U64> precompPawnMoves(int colour) {
     U64 move_mask = 0ULL;
     int startRank = (colour) ? 1:5;
     int finalRank = (colour) ? 0:7;
+    int multiplier = (color) ? 1:-1;
     int rank,file;
     for (int i = 0; i < BOARD_AREA; i++) {
       move_mask=0ULL;
@@ -430,12 +431,12 @@ std::list<U64> precompPawnMoves(int colour) {
   
       if(rank==startRank) {
         
-        move_mask = setBit(move_mask, i+16);
+        move_mask = setBit(move_mask, i+(16*multiplier));
 
       }
       if(rank!=finalRank) {
 
-      move_mask = setBit(move_mask,i+8);
+      move_mask = setBit(move_mask,i+(8*multplier));
 
       }
     legal_moves = change_value(legal_moves, move_mask,i);
