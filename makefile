@@ -1,3 +1,3 @@
 all:
-	g++ main.cpp -o main
+	g++ main.cpp chess.cpp misc.cpp -o main
 	./main
