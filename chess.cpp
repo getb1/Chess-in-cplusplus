@@ -366,4 +366,29 @@ std::list<U64> Game::precompPawnMoves(int colour) {
     }
   return legal_moves;
   }
+U64 Game::get_legal_knight_moves_in_positon(int position, U64 board, int colour) {
 
+  if(getNthBit(board,position)) {
+    U64 pieceColour = (colour) ? white:black;
+    U64 opposite = (colour) ? black:white;
+    U64 precomputed = get_value(precomp_knight_moves, position);
+    U64 conflicts = precomputed&pieceColour;
+    U64 legal_moves = conflicts^precomputed;
+    
+    return legal_moves;
+  }
+
+
+  return 0ull;
+}
+
+U64 Game::get_legal_pawn_moves_in_position(int position, U64 board, int colour) {
+
+  if(getNthBit(board,position)) {
+
+  U64 pieceColour = (colour) ? white:black;
+  U64 opposite = (color) ? black:white;
+  //U64 precomputed = (color) ? get_value(pre)
+
+
+}
