@@ -416,7 +416,7 @@ class Game {
   
 
 std::list<U64> precompPawnMoves(int colour) {
-    std::list<U64> legal_moves;
+    std::list<U64> legal_moves(64,0ULL);
     U64 move_mask = 0ULL;
     int startRank = (colour) ? 1:5;
     int finalRank = (colour) ? 0:7;
