@@ -416,27 +416,27 @@ class Game {
   
 
 std::list<U64> precompPawnMoves(int colour) {
-    std::list<U64> legal_moves;
+    std::list<U64> legal_moves(64,0ULL);
     U64 move_mask = 0ULL;
-    int startRank = (colour) ? 1:5;
+    int startRank = (colour) ? 1:6;
     int finalRank = (colour) ? 0:7;
+    int multiplier = (color) ? 1:-1;
     int rank,file;
     for (int i = 0; i < BOARD_AREA; i++) {
-      // std::cout << i << std::endl;
       move_mask=0ULL;
       rank=floor(i/8);
       file = i%8;
-      if(((rank<startRank)&&(startRank==1))||((rank>startRank)&&(startRank==5))) {
+      if(((rank<startRank)&&(startRank==2))||((rank>startRank)&&(startRank==6))) {
         continue;}
   
       if(rank==startRank) {
         
-        move_mask = setBit(move_mask, i+16);
-        std::cout << move_mask << std::endl;
+        move_mask = setBit(move_mask, i+(16*multiplier));
+
       }
       if(rank!=finalRank) {
 
-      move_mask = setBit(move_mask,i+8);
+      move_mask = setBit(move_mask,i+(8*multplier));
 
       }
     legal_moves = change_value(legal_moves, move_mask,i);
@@ -452,7 +452,7 @@ int main() {
 		chess.display_board();
 		
 		U64 rook_legal = chess.get_legal_moves_for_piece_in_position(3,chess.queens, chess.queenPrecompMoves,chess.white); 
-    chess.debug_display_bitboard(chess.whitePawnPrecompMoves.front(),'*');
+    chess.debug_display_bitboard(get_value(chess.whitePawnPrecompMoves, 8),'*');
     
 		return 0;
 }
