@@ -8,7 +8,7 @@
 #include <array>
 #include "misc.h"
 Game::Game() {init();} 
-		
+typedef unsigned long long U64;		
 void Game::init() {
 		// initialise the board to the starting position to start the game
 		white = 0x000000000000ffff;
@@ -387,8 +387,10 @@ U64 Game::get_legal_pawn_moves_in_position(int position, U64 board, int colour) 
   if(getNthBit(board,position)) {
 
   U64 pieceColour = (colour) ? white:black;
-  U64 opposite = (color) ? black:white;
+  U64 opposite = (colour) ? black:white;
   //U64 precomputed = (color) ? get_value(pre)
 
-
+  return opposite;
+}
+return 0ull
 }
