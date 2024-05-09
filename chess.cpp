@@ -392,5 +392,5 @@ U64 Game::get_legal_pawn_moves_in_position(int position, U64 board, int colour) 
 
   return opposite;
 }
-return 0ull
+return 0ull;
 }
