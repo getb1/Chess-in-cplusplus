@@ -397,39 +397,49 @@ U64 Game::get_legal_pawn_moves_in_position(int position, U64 board, int colour, 
 
   U64 legal_moves = precomputed;
   const int range = (twoMoves) ? 3:2;
-  
+  std::cout << legal_moves << std::endl;  
     int blockAll = 0;
     for(int i=1;i<range;++i) {
       int newPos = position+((i*BOARD_SIZE)*multiplier);
       if(getNthBit(collisions, position+((i*BOARD_SIZE)*multiplier))||blockAll) {
-
+        std::cout << "HI";
         legal_moves = setBitzero(legal_moves, newPos);
         
       }
 
     }
-  
-  
+    std::cout << legal_moves << std::endl; 
   const int file = position%BOARD_SIZE;
   int dx[] = {1,-1};
   int dy = 1 * multiplier;
   
   for(int i=0; i<2;++i) {
 
-    int new_file = file+dx[i]
+    int new_file = file+dx[i];
     int new_rank = rank+(dy*multiplier);
     int takepos = (new_rank*8)+new_file;
     if(((new_file >=0)&&(new_file<BOARD_SIZE))&&((new_rank >=0)&&(new_rank<BOARD_SIZE))) {
       if(getNthBit(opposite, takepos)) {
-        setBit(legal_moves, newPos);
+        legal_moves=setBit(legal_moves, takepos);
 
       }
 
     }
   }
   
+  if(enPasssq!=-1) {
+    static const int enPassRank = floor(enPasssq/BOARD_SIZE);
+    static const int enPassFile = enPasssq%BOARD_SIZE;
+    if(enPassRank==rank+(1*multiplier)) {
+      if((enPassFile==file-1)||(enPassFile==file+1)) {
+        legal_moves = setBit(legal_moves, enPasssq);}
 
-  return opposite;
+    }
+    
+
+  }
+
+  return legal_moves;
 }
 return 0ull;
 }
