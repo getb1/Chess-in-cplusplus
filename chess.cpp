@@ -382,13 +382,52 @@ U64 Game::get_legal_knight_moves_in_positon(int position, U64 board, int colour)
   return 0ull;
 }
 
-U64 Game::get_legal_pawn_moves_in_position(int position, U64 board, int colour) {
+U64 Game::get_legal_pawn_moves_in_position(int position, U64 board, int colour, int enPasssq) {
 
   if(getNthBit(board,position)) {
 
-  U64 pieceColour = (colour) ? white:black;
-  U64 opposite = (colour) ? black:white;
-  //U64 precomputed = (color) ? get_value(pre)
+  const U64 pieceColour = (colour) ? white:black;
+  const U64 opposite = (colour) ? black:white;
+  const U64 precomputed = (colour) ? get_value(whitePawnPrecompMoves,position):get_value(blackPawnPrecompMoves,position);
+  const int rank = floor(position/8);
+  const int startRank = (colour) ? WHITE_PAWN_START_RANK:BLACK_PAWN_START_RANK;
+  const int twoMoves = (rank==startRank) ? 1:0;
+  const int multiplier = (colour) ? 1:-1;
+  const int collisions = (black|white)&precomputed;
+
+  U64 legal_moves = precomputed;
+  const int range = (twoMoves) ? 3:2;
+  
+    int blockAll = 0;
+    for(int i=1;i<range;++i) {
+      int newPos = position+((i*BOARD_SIZE)*multiplier);
+      if(getNthBit(collisions, position+((i*BOARD_SIZE)*multiplier))||blockAll) {
+
+        legal_moves = setBitzero(legal_moves, newPos);
+        
+      }
+
+    }
+  
+  
+  const int file = position%BOARD_SIZE;
+  int dx[] = {1,-1};
+  int dy = 1 * multiplier;
+  
+  for(int i=0; i<2;++i) {
+
+    int new_file = file+dx[i]
+    int new_rank = rank+(dy*multiplier);
+    int takepos = (new_rank*8)+new_file;
+    if(((new_file >=0)&&(new_file<BOARD_SIZE))&&((new_rank >=0)&&(new_rank<BOARD_SIZE))) {
+      if(getNthBit(opposite, takepos)) {
+        setBit(legal_moves, newPos);
+
+      }
+
+    }
+  }
+  
 
   return opposite;
 }

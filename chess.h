@@ -27,7 +27,7 @@ class Game {
     U64 get_legal_moves_for_piece_in_position(int position, U64 board, std::list<U64> precomputed, U64 colour_board);
     std::list<U64> precompPawnMoves(int colour);
     U64 get_legal_knight_moves_in_positon(int position, U64 board, int colour);
-    U64 get_legal_pawn_moves_in_position(int position, U64 board, int colour);
+    U64 get_legal_pawn_moves_in_position(int position, U64 board, int colour, int enPasssq);
 		U64 white;
 		U64 black;
 		U64 rooks;
@@ -42,6 +42,8 @@ class Game {
 		
 		const int BOARD_SIZE = 8;
 		const int BOARD_AREA = BOARD_SIZE*BOARD_SIZE;
+    const int WHITE_PAWN_START_RANK = 1;
+    const int BLACK_PAWN_START_RANK = 6;
 		std::list<U64> rookPrecompMoves;
 		std::list<U64> bishopPrecompMoves;
 		std::list<U64> queenPrecompMoves;
