@@ -19,7 +19,11 @@ void Game::init() {
 		kings = 0x1000000000000010;
 		queens= 0x0800000000000008;
 		pawns = 0x00ff00000000ff00;
-		
+		kingsNotMoved = 0b11; // store wether either king has moved using  3 bit number 
+                       // 3 - Neither king has moved
+                       // 2 - Black king has moved but white hasn't
+                       // 
+    rooksNotMoved = 0b1111 // same system for the rooks
 		// precompute all the knight moves so that we can use these later
 		
 		precomp_knight_moves = precompute_knight_moves();
@@ -32,9 +36,9 @@ void Game::init() {
 		std::vector<int> queenDy = {1, -1, 0, 0, 1, -1, 1, -1};
 		
 		rookPrecompMoves = precomputePieceMoves(rookDx, rookDy);
-        bishopPrecompMoves = precomputePieceMoves(bishopDx, bishopDy);
-        queenPrecompMoves = precomputePieceMoves(queenDx, queenDy);
-        kingPrecompMoves = precomputeKingMoves(queenDx, queenDy);
+    bishopPrecompMoves = precomputePieceMoves(bishopDx, bishopDy);
+    queenPrecompMoves = precomputePieceMoves(queenDx, queenDy);
+    kingPrecompMoves = precomputeKingMoves(queenDx, queenDy);
 		whitePawnPrecompMoves = precompPawnMoves(1);
     blackPawnPrecompMoves = precompPawnMoves(0);
 		}
@@ -397,18 +401,17 @@ U64 Game::get_legal_pawn_moves_in_position(int position, U64 board, int colour, 
 
   U64 legal_moves = precomputed;
   const int range = (twoMoves) ? 3:2;
-  std::cout << legal_moves << std::endl;  
+  
     int blockAll = 0;
     for(int i=1;i<range;++i) {
       int newPos = position+((i*BOARD_SIZE)*multiplier);
       if(getNthBit(collisions, position+((i*BOARD_SIZE)*multiplier))||blockAll) {
-        std::cout << "HI";
+
         legal_moves = setBitzero(legal_moves, newPos);
         
       }
 
     }
-    std::cout << legal_moves << std::endl; 
   const int file = position%BOARD_SIZE;
   int dx[] = {1,-1};
   int dy = 1 * multiplier;
@@ -442,4 +445,28 @@ U64 Game::get_legal_pawn_moves_in_position(int position, U64 board, int colour, 
   return legal_moves;
 }
 return 0ull;
+}
+
+U64 Game::generate_attack_map(int colour) {
+
+  static const U64 colour_board = (colour) ? white:black;
+  static const U64 rooks_board  = colour_board&rooks;
+  static const U64 knight_board = colour_board&knights;
+  static const U64 bishops_board= colour_board&bishops;
+  static const U64 queen_board  = colour_board&queens;
+  static const U64 king_board   = colour_board&kings; 
+  U64 attackMap = 0ULL
+  for(int i=0;i<BOARD_AREA) {
+
+    if(getNthBit(rooks_board,i)) {
+      
+    attackMap |= get_legal_moves_for_piece_in_position(i, rooks_board, rookPrecompMoves, colour_board);
+    } else if(getNthBit(knight_board,i)) {
+      attackMap |= get_legal_knight_moves_in_positon(i, knight_board, colour);
+    } else if(getNthBit(bishops_board,i)) {
+      attackMap |= get_legal_moves_for_piece_in_position(i, bishops_board,bishopPrecompMoves, colour_board);
+    }
+
+  }
+
 }

@@ -26,8 +26,10 @@ class Game {
     std::list<U64> precomputePieceMoves(std::vector<int>& dx, std::vector<int>& dy);
     U64 get_legal_moves_for_piece_in_position(int position, U64 board, std::list<U64> precomputed, U64 colour_board);
     std::list<U64> precompPawnMoves(int colour);
-    U64 get_legal_knight_moves_in_positon(int position, U64 board, int colour);
+
     U64 get_legal_pawn_moves_in_position(int position, U64 board, int colour, int enPasssq);
+    U64 generate_attack_map(int colour);
+    U64 get_king_moves_in_position(int colour);
 		U64 white;
 		U64 black;
 		U64 rooks;
@@ -36,6 +38,8 @@ class Game {
 		U64 kings;
 		U64 queens;
 		U64 pawns;
+    U64 kingsNotMoved;
+    U64 rooksNotMoved;
 		const int BLACK = 0;
 		const int WHITE = 1;
 		std::list<U64> precomp_knight_moves;
