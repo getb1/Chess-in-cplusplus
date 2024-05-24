@@ -23,7 +23,7 @@ void Game::init() {
                        // 3 - Neither king has moved
                        // 2 - Black king has moved but white hasn't
                        // 
-    rooksNotMoved = 0b1111 // same system for the rooks
+    rooksNotMoved = 0b1111; // same system for the rooks
 		// precompute all the knight moves so that we can use these later
 		
 		precomp_knight_moves = precompute_knight_moves();
@@ -398,7 +398,7 @@ U64 Game::get_legal_pawn_moves_in_position(int position, U64 board, int colour, 
   const int twoMoves = (rank==startRank) ? 1:0;
   const int multiplier = (colour) ? 1:-1;
   const int collisions = (black|white)&precomputed;
-
+  
   U64 legal_moves = precomputed;
   const int range = (twoMoves) ? 3:2;
   
@@ -447,16 +447,17 @@ U64 Game::get_legal_pawn_moves_in_position(int position, U64 board, int colour, 
 return 0ull;
 }
 
-U64 Game::generate_attack_map(int colour) {
+U64 Game::generate_attack_map(int colour, int enPasssq) {
 
   static const U64 colour_board = (colour) ? white:black;
   static const U64 rooks_board  = colour_board&rooks;
   static const U64 knight_board = colour_board&knights;
   static const U64 bishops_board= colour_board&bishops;
   static const U64 queen_board  = colour_board&queens;
-  static const U64 king_board   = colour_board&kings; 
-  U64 attackMap = 0ULL
-  for(int i=0;i<BOARD_AREA) {
+  static const U64 king_board   = colour_board&kings;
+  static const U64 pawn_board = colour_board&pawns; 
+  U64 attackMap = 0ULL;
+  for(int i=0;i<BOARD_AREA;++i) {
 
     if(getNthBit(rooks_board,i)) {
       
@@ -465,8 +466,15 @@ U64 Game::generate_attack_map(int colour) {
       attackMap |= get_legal_knight_moves_in_positon(i, knight_board, colour);
     } else if(getNthBit(bishops_board,i)) {
       attackMap |= get_legal_moves_for_piece_in_position(i, bishops_board,bishopPrecompMoves, colour_board);
+    } else if(getNthBit(queen_board,i)) {
+      attackMap |= get_legal_moves_for_piece_in_position(i, queen_board, queenPrecompMoves, colour_board);
+    } else if(getNthBit(king_board, i)) {
+      attackMap |= get_legal_moves_for_piece_in_position(i, king_board, kingPrecompMoves, colour_board);
+    } else if(getNthBit(pawn_board,i)) {
+    	attackMap |= get_legal_pawn_moves_in_position(i,pawn_board, colour, enPasssq);
+    	
     }
 
   }
-
+    return attackMap;
 }

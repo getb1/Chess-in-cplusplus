@@ -30,6 +30,7 @@ int main() {
     chess.display_board();
     U64 rook_legal = chess.get_legal_moves_for_piece_in_position(3, chess.queens, chess.queenPrecompMoves, chess.white);
     U64 legal_moves = chess.get_legal_pawn_moves_in_position(8, chess.pawns, 1, -1);
-    chess.debug_display_bitboard(legal_moves, '*');
+    U64 attack_map = chess.generate_attack_map(chess.WHITE,-1);
+    chess.debug_display_bitboard(attack_map, '*');
     return 0;
 }
