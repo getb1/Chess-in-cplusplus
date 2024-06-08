@@ -19,15 +19,15 @@ void Game::init() {
 		kings = 0x1000000000000010;
 		queens= 0x0800000000000008;
 		pawns = 0x00ff00000000ff00;
-		kingsNotMoved = 0b11; // store wether either king has moved using  3 bit number 
-                       // 3 - Neither king has moved
-                       // 2 - Black king has moved but white hasn't
-                       // 
+		kingsNotMoved = 0b11; // store wether either king has moved using  2 bit number left = white, right = black
+                                              // 
     rooksNotMoved = 0b1111; // same system for the rooks
+    half_move_clock = 0;
+    full_move_clock = 0;
 		// precompute all the knight moves so that we can use these later
 		
 		precomp_knight_moves = precompute_knight_moves();
-		
+		to_play=WHITE;
 		std::vector<int> bishopDx = {1, 1, -1, -1};
 		std::vector<int> bishopDy = {1, -1, 1, -1};
 		std::vector<int> rookDx = {0, 0, 1, -1};
@@ -447,6 +447,50 @@ U64 Game::get_legal_pawn_moves_in_position(int position, U64 board, int colour, 
 return 0ull;
 }
 
+U64 Game::gen_pawn_attack(int position, U64 board, int colour, int enPasssq) {
+
+	const U64 pieceColour = (colour) ? white:black;
+  const U64 opposite = (colour) ? black:white;
+  const U64 precomputed = (colour) ? get_value(whitePawnPrecompMoves,position):get_value(blackPawnPrecompMoves,position);
+  const int rank = floor(position/8);
+  const int startRank = (colour) ? WHITE_PAWN_START_RANK:BLACK_PAWN_START_RANK;
+  const int twoMoves = (rank==startRank) ? 1:0;
+  const int multiplier = (colour) ? 1:-1;
+  const int collisions = (black|white)&precomputed;
+  U64 legal_moves = 0ULL;
+	const int file = position%BOARD_SIZE;
+  int dx[] = {1,-1};
+  int dy = 1 * multiplier;
+  
+  for(int i=0; i<2;++i) {
+
+    int new_file = file+dx[i];
+    int new_rank = rank+(dy*multiplier);
+    int takepos = (new_rank*8)+new_file;
+    if(((new_file >=0)&&(new_file<BOARD_SIZE))&&((new_rank >=0)&&(new_rank<BOARD_SIZE))) {
+      if(1==1) {
+        legal_moves=setBit(legal_moves, takepos);
+
+      }
+
+    }
+  }
+  
+  if(enPasssq!=-1) {
+    static const int enPassRank = floor(enPasssq/BOARD_SIZE);
+    static const int enPassFile = enPasssq%BOARD_SIZE;
+    if(enPassRank==rank+(1*multiplier)) {
+      if((enPassFile==file-1)||(enPassFile==file+1)) {
+        legal_moves = setBit(legal_moves, enPasssq);}
+
+    }
+    
+
+  }
+
+  return legal_moves;
+}
+
 U64 Game::generate_attack_map(int colour, int enPasssq) {
 
   static const U64 colour_board = (colour) ? white:black;
@@ -471,10 +515,126 @@ U64 Game::generate_attack_map(int colour, int enPasssq) {
     } else if(getNthBit(king_board, i)) {
       attackMap |= get_legal_moves_for_piece_in_position(i, king_board, kingPrecompMoves, colour_board);
     } else if(getNthBit(pawn_board,i)) {
-    	attackMap |= get_legal_pawn_moves_in_position(i,pawn_board, colour, enPasssq);
-    	
+    	attackMap |= gen_pawn_attack(i,pawn_board, colour, enPasssq);
     }
 
   }
     return attackMap;
+}
+
+int Game::inCheck(int colour, int enPasssq) {
+	U64 attackMap = generate_attack_map(~colour, enPasssq);
+	const U64 pieceColour = (colour) ? white:black;
+  const U64 opposite = (colour) ? black:white;
+	U64 king_position = pieceColour&kings;
+	if(king_position&attackMap==king_position) {
+	return 1;}
+	else {
+		return 0;}
+
+}
+
+char Game::getPieceAtSqaure(int square) {
+
+	
+
+	std::list<U64> bit_boards = {rooks,knights,bishops,kings,queens,pawns};
+	std::list<char> symbols = {'r','n','b','k','q','p'};
+	std::list<char> board(BOARD_AREA, '-');
+	U64 all_pieces = black | white;
+			
+			
+	for (auto symbol = symbols.begin(); symbol!=symbols.end(); ++symbol) {
+			U64 board_being_used = bit_boards.front();
+			bit_boards.pop_front();
+			
+			
+					
+					if(getNthBit(board_being_used, square)) {
+							//we can set the sqaure in the board to the pieces symbol if it is there
+							char toUse = *symbol;
+							if(getNthBit(white, square)) {
+								return toupper(toUse);
+							}
+							return toUse;
+					
+			
+	}
+
+
+
+}
+return ' ';}
+
+char Game::convert_sq_to_str(int square) {
+
+  int num;
+  char code;
+
+
+  int rank = floor(square/8);
+  code += char(floor(square/8)+97);
+  code += char((square%8)+49);
+
+  return code;
+
+}
+
+std::string Game::generate_fen(int enPasssq) {
+	std::string fen = "";
+	int spaces = 0;
+  char piece;
+	for(int i =0;i<BOARD_AREA;++i) {
+			piece =getPieceAtSqaure(i);
+  if(piece!=' ') {
+
+    if(spaces>=1) {
+      fen += std::to_string(spaces);
+      spaces=0;
+    }
+
+    fen += piece;
+  }  else {
+    spaces++;
+  }
+
+  if((i+1)%8==0) {
+    if(spaces>0) {
+    fen+=std::to_string(spaces);
+    spaces=0;}
+
+    if(i!=63) {
+    fen += "/";
+    }
+  }
+
+	}
+  fen+= (to_play) ? " w " : " b ";
+ 
+  if(getNthBit(kingsNotMoved, 1)) {
+    if(getNthBit(rooksNotMoved, 2)) {
+      fen+="K";
+    } if(getNthBit(rooksNotMoved, 3)) {
+      fen+="Q";
+    }
+  }
+
+   if(getNthBit(kingsNotMoved, 0)) {
+    if(getNthBit(rooksNotMoved, 0)) {
+      fen+="k";
+    } if(getNthBit(rooksNotMoved, 1)) {
+      fen+="q";
+    }
+  }
+    fen +=" ";
+  if(enPasssq!=-1) {
+    fen += convert_sq_to_str(enPasssq);
+  } else {fen+= "-";}
+  
+  fen +=" ";
+  fen += std::to_string(half_move_clock);
+fen+=" ";
+  fen += std::to_string(full_move_clock);
+
+return fen;
 }

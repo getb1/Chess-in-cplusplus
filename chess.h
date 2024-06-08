@@ -30,6 +30,13 @@ class Game {
     U64 get_legal_pawn_moves_in_position(int position, U64 board, int colour, int enPasssq);
     U64 generate_attack_map(int colour, int enPasssq);
     U64 get_king_moves_in_position(int colour);
+    U64 gen_pawn_attack(int position, U64 board, int colour, int enPasssq);
+    std::string generate_fen(int enPasssq);
+    char getPieceAtSqaure(int square);
+
+    char convert_sq_to_str(int sqaure);
+
+    int inCheck(int colour, int enPasssq);
 		U64 white;
 		U64 black;
 		U64 rooks;
@@ -42,6 +49,14 @@ class Game {
     U64 rooksNotMoved;
 		const int BLACK = 0;
 		const int WHITE = 1;
+
+
+    
+    int to_play;
+    int half_move_clock;
+    int full_move_clock;
+    int en_passant_sqaure;
+
 		std::list<U64> precomp_knight_moves;
 		
 		const int BOARD_SIZE = 8;

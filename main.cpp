@@ -32,5 +32,6 @@ int main() {
     U64 legal_moves = chess.get_legal_pawn_moves_in_position(8, chess.pawns, 1, -1);
     U64 attack_map = chess.generate_attack_map(chess.WHITE,-1);
     chess.debug_display_bitboard(attack_map, '*');
+    std::cout << chess.generate_fen(-1);
     return 0;
 }
